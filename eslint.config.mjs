@@ -1,14 +1,26 @@
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-import { FlatCompat } from "@eslint/eslintrc";
+// eslint.config.mjs
+import { defineConfig, globalIgnores } from "eslint/config";
+import nextCoreWebVitals from "eslint-config-next/core-web-vitals";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const eslintConfig = defineConfig([
+  // Next.js + React + Core Web Vitals rules
+  ...nextCoreWebVitals,
 
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
+  // Optional: customize/disable rules here
+  // {
+  //   rules: {
+  //     "react/no-unescaped-entities": "off",
+  //     "@next/next/no-img-element": "off",
+  //   },
+  // },
 
-const eslintConfig = [...compat.extends("next/core-web-vitals")];
+  // Ignore build artifacts
+  globalIgnores([
+    ".next/**",
+    "out/**",
+    "build/**",
+    "next-env.d.ts",
+  ]),
+]);
 
 export default eslintConfig;
