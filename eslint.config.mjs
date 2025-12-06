@@ -1,26 +1,19 @@
-// eslint.config.mjs
-import { defineConfig, globalIgnores } from "eslint/config";
-import nextCoreWebVitals from "eslint-config-next/core-web-vitals";
+import js from "@eslint/js";
 
-const eslintConfig = defineConfig([
-  // Next.js + React + Core Web Vitals rules
-  ...nextCoreWebVitals,
-
-  // Optional: customize/disable rules here
-  // {
-  //   rules: {
-  //     "react/no-unescaped-entities": "off",
-  //     "@next/next/no-img-element": "off",
-  //   },
-  // },
-
-  // Ignore build artifacts
-  globalIgnores([
-    ".next/**",
-    "out/**",
-    "build/**",
-    "next-env.d.ts",
-  ]),
-]);
+const eslintConfig = [
+  {
+    ignores: [".next/**", "out/**", "build/**", "next-env.d.ts"],
+  },
+  {
+    files: ["**/*.{js,jsx,mjs}"],
+    languageOptions: {
+      ecmaVersion: "latest",
+      sourceType: "module",
+    },
+    rules: {
+      ...js.configs.recommended.rules,
+    },
+  },
+];
 
 export default eslintConfig;
