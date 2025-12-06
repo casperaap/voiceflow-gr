@@ -1,0 +1,239 @@
+@import "tailwindcss";
+
+/* apply to h1 only */
+h1 {
+  font-family: var(--font-hiragino);
+  font-weight: 700; /* if you mapped a 700 source; else set 400 */
+  -webkit-text-stroke: 0.4px currentColor;
+}
+
+h3 {
+  font-family: var(--font-hiragino);
+  font-weight: 700; /* if you mapped a 700 source; else set 400 */
+}
+
+:root {
+  /* same layering as the example button */
+  --brand-gradient:
+    radial-gradient(80% 80% at 116% 99%, #3ecfef 0, #e07e7800 100%),
+    radial-gradient(150% 150% at -36% 25%, #c75086 0, #e07e7800 100%),
+    radial-gradient(76% 56% at 64% 102%, #e07e78 0, #e07e7800 100%),
+    linear-gradient(0deg, #7930d8 100%, #7930d800 0);
+}
+
+.text-span-2 {
+  background-image: linear-gradient(135deg, var(--brand) 13%, #fc856d);
+  -webkit-text-fill-color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.bg-secondary {
+  background-color: #343a40;
+}
+
+.bg-brand {
+  background-color: var(--brand);
+}
+
+.text-parag {
+  color: #525252;
+}
+
+.bg-bgsec {
+  background-color: #353a41;
+}
+
+.alternating-blocks {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+@layer base {
+  button:not([disabled]),
+  [role="button"]:not([disabled]) {
+    cursor: pointer;
+  }
+
+  body.dark-bounce {
+    background-color: #F1F5F7;
+    overscroll-behavior-y: contain;
+  }
+}
+
+/* ---------- custom utilities ---------- */
+@layer utilities {
+  /* Typing-indicator dots */
+  .typing-indicator {
+    display: flex;
+    gap: 0px;
+  }
+
+  .typing-indicator .dot {
+    width: 6px;
+    height: 6px;
+    background: #888;
+    border-radius: 50%;
+    animation: bounce 1s infinite ease-in-out;
+  }
+
+  .typing-indicator .dot:nth-child(1) { animation-delay: 0s; }
+  .typing-indicator .dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-indicator .dot:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes bounce {
+    0%, 80%, 100% { transform: translateY(0); }
+    40%          { transform: translateY(-6px); }
+  }
+
+  .bg-tiles {
+    /* tweak these three numbers to taste */
+    --tile-w : 300px;      /* tile width   (1.5× old) */
+    --tile-h : 400px;      /* tile height  (2×  old)  */
+    --gap    : 10px;       /* gutter size  */
+
+    /* 1) solid tile colour */
+    background-color: #fcfcfc;
+
+    /* 2) white grid lines: we paint the gaps only */
+    background-image:
+      repeating-linear-gradient(
+        90deg,
+        transparent 0 var(--tile-w),
+        #ffffff      var(--tile-w) calc(var(--tile-w) + var(--gap))
+      ),
+      repeating-linear-gradient(
+        0deg,
+        transparent 0 var(--tile-h),
+        #ffffff      var(--tile-h)  calc(var(--tile-h) + var(--gap))
+      );
+
+    /* pattern repeat size = tile + gap on each axis */
+    background-size: calc(var(--tile-w) + var(--gap))
+                     calc(var(--tile-h) + var(--gap));
+  }
+
+  /* 1) Desktop: one full copy → −100% over 22.5s */
+  @keyframes marquee-desktop {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-100%); }
+  }
+
+  /* 2) Mobile: two full copies → −200% over 17s */
+  @keyframes marquee-mobile {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-300%); }
+  }
+
+  @keyframes marquee-left {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+
+  @keyframes marquee-right {
+    from { transform: translateX(-50%); }
+    to   { transform: translateX(0); }
+  }
+
+  @keyframes scroll-text-loop {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-25%); }
+  }
+
+  .animate-scroll-text-loop {
+    animation: scroll-text-loop 8s linear infinite;
+  }
+
+
+    @keyframes ticker {
+      0%   { transform: translateX(0); }
+      100% { transform: translateX(-50%); } /* slide exactly one copy width */
+    }
+
+    .animate-ticker {
+      animation: ticker 12s linear infinite;
+    }
+
+    /* Respect reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      .animate-ticker { animation: none; }
+    }
+
+  .text-fade-scroll {
+    mask-image: linear-gradient(
+      to right,
+      transparent 0%,
+      white 10%,
+      white 90%,
+      transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent 0%,
+      white 10%,
+      white 90%,
+      transparent 100%
+    );
+  }
+
+  .text-fade-none {
+    mask-image: none;
+    -webkit-mask-image: none;
+  }
+
+  /* 3) Base animation (desktop & tablet) */
+  .animate-marquee {
+    animation-name: marquee-desktop;
+    animation-duration: 22.5s;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+  }
+
+  /* 4) Mobile override: swap in the 200% keyframes */
+  @media (max-width: 839px) {
+    .animate-marquee {
+      animation-name: marquee-mobile;
+      animation-duration: 25s;
+    }
+  }
+}
+
+/* Pulse the strength of the gradient overlays */
+@keyframes fadeStrength {
+  /* “normal” → “stronger” → back to normal (no full white) */
+  0%, 18%   { opacity: 1; }      /* baseline */
+  55%, 70%  { opacity: 2.92; }   /* stronger fade */
+  100%      { opacity: 1; }
+}
+
+.fade-breath {
+  animation: fadeStrength 9s cubic-bezier(.4,0,.2,1) infinite;
+}
+
+/* Stagger the bottom one so they don't peak at the same time */
+.fade-breath--offset {
+  animation-delay: 1.2s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-breath { animation: none; }
+}
+
+@keyframes badge-marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    /* two copies side by side -> -50% shows the second copy */
+    transform: translateX(-50%);
+  }
+}
+
+.badge-marquee-track {
+  animation-name: badge-marquee;
+  animation-duration: var(--badge-duration, 18s);
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform;
+}
+
