@@ -38,7 +38,7 @@ export default function SignInPage() {
         {/* 1) Icon + Brand */}
         <div className="flex items-center justify-center mb-7 space-x-2">
           <Image
-            src="/images/vf-icon-green.png"
+            src="/images/vf-icon-green (2).png"
             alt="VoiceFlow Logo"
             width={60}
             height={40}
