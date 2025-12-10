@@ -1,5 +1,5 @@
 {
-  "name": "urbrandname",
+  "name": "voiceflow",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -31,7 +31,8 @@
     "resend": "^4.5.1",
     "stripe": "^20.0.0",
     "tailwind-scrollbar-hide": "^2.0.0",
-    "vosk-browser": "^0.0.8"
+    "vosk-browser": "^0.0.8",
+    "zod": "^4.1.13"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
