@@ -34,7 +34,7 @@ function MobileBlocker() {
             Back to Home
           </a>
           <a
-            href="/api/auth/signin"
+            href="/signin"
             className="inline-flex items-center justify-center px-6 py-3 rounded-lg bg-white/5 border border-white/10 text-white font-semibold hover:bg-white/10 transition-colors"
           >
             Sign Out
@@ -49,8 +49,8 @@ export default async function DashboardPage() {
   // 1) User must be logged in
   const session = await auth();
   if (!session?.user) {
-    // You can use "/sign-in" if you prefer your custom page
-    redirect("/api/auth/signin");
+    // You can use "/signin" if you prefer your custom page
+    redirect("/signin");
   }
 
   // 2) Load user + billing from Mongo
