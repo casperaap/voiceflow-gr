@@ -1,6 +1,7 @@
 // app/components/Faq.jsx
 "use client";
 import FaqCtaBanner from "./FaqCtaBanner";
+import ScrollFadeIn from "../ScrollFadeIn";
 
 export default function Faq() {
   const faqData = [
@@ -51,6 +52,7 @@ export default function Faq() {
   ];
 
   return (
+    <ScrollFadeIn>
     <section id="faq" className="bg-[#ebeffc] py-12 md:py-32 px-4 flex flex-col items-center gap-2 md:gap-12 scroll-mt-20">
       <h2 className="text-3xl md:text-5xl font-semibold text-black mb-4 mx-4 md:mx-0 text-center">
         Have questions? We have answers
@@ -98,5 +100,6 @@ export default function Faq() {
       </div>
       <FaqCtaBanner />
     </section>
+    </ScrollFadeIn>
   );
 }

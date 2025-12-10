@@ -5,13 +5,16 @@ import { useState, useRef, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import NotificationToast from "./NotificationToast";
+import { FeedbackModal } from "./FeedbackModal";
 
 export default function NavigationBar({ onNavigate, currentView, selectedProjectId, navProjects, setNavProjects, onOpenSettings, onOpenDeleteModal, setRefreshTrigger }) {
   const { data: session } = useSession();
   const userName = session?.user?.name || "User";
+  const userEmail = session?.user?.email || "";
 
   const [openDropdown, setOpenDropdown] = useState(null);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [editingProjectId, setEditingProjectId] = useState(null);
   const [editingName, setEditingName] = useState("");
   const editInputRef = useRef(null);
@@ -384,7 +387,21 @@ export default function NavigationBar({ onNavigate, currentView, selectedProject
       </div>
 
       {/* Notification Toast */}
-      <NotificationToast open={notifOpen} onClose={() => setNotifOpen(false)} />
+      <NotificationToast 
+        open={notifOpen} 
+        onClose={() => setNotifOpen(false)} 
+        onFeedbackClick={() => {
+          setFeedbackOpen(true);
+          setNotifOpen(false);
+        }}
+      />
+
+      {/* Feedback Modal */}
+      <FeedbackModal 
+        open={feedbackOpen} 
+        onClose={() => setFeedbackOpen(false)} 
+        userEmail={userEmail}
+      />
     </nav>
   );
 }

@@ -75,6 +75,9 @@ const config = {
         fadeouttopleft: "fade-out-top-left 3s ease-in-out infinite",
         fadeouttopright: "fade-out-top-right 3s ease-in-out infinite",
       },
+      zIndex: {
+        9999: '9999',
+      },
     },
   },
   plugins: [daisyui, scrollbarHide],

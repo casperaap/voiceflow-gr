@@ -2,14 +2,20 @@
 
 import { useRef, useState } from "react";
 
+const MODEL_URL =
+  "https://ccoreilly.github.io/vosk-browser/models/vosk-model-small-en-us-0.15.tar.gz";
+
 export default function FaqCtaBanner() {
   const fileInputRef = useRef(null);
-  const [isUploaded, setIsUploaded] = useState(false);
   const [fileName, setFileName] = useState("");
   const [isBusy, setIsBusy] = useState(false);
   const [error, setError] = useState(null);
+  const [modelLoaded, setModelLoaded] = useState(false);
 
-  // --- Overlay for fullscreen PPT viewer (same idea as PresentationControls) ---
+  const modelRef = useRef(null);
+  const voskModuleRef = useRef(null);
+
+  // --- Overlay for fullscreen PPT viewer ---
   function ensureOverlay() {
     let el = document.getElementById("pptx-viewer-root");
     if (!el) {
@@ -47,7 +53,7 @@ export default function FaqCtaBanner() {
     });
   }
 
-  // --- Helpers copied from PresentationControls.js :contentReference[oaicite:1]{index=1} ---
+  // --- Normalization helpers (same as before) ---
   const normalize = (s) =>
     s
       .toLowerCase()
@@ -66,6 +72,35 @@ export default function FaqCtaBanner() {
     return m ? m.length : 0;
   };
 
+  // --- Load Vosk model (vosk-browser) ---
+  async function loadVoiceModel() {
+    if (modelRef.current) return modelRef.current;
+
+    const Vosk =
+      voskModuleRef.current || (voskModuleRef.current = await import("vosk-browser"));
+
+    // NPM API: createModel(url) -> Model :contentReference[oaicite:1]{index=1}
+    const model = await Vosk.createModel(MODEL_URL);
+    modelRef.current = model;
+    return model;
+  }
+
+  async function handleLoadModelClick() {
+    setError(null);
+    setIsBusy(true);
+    try {
+      const model = await loadVoiceModel();
+      if (!model) throw new Error("Model did not load");
+      console.log("[VOSK] Model loaded", MODEL_URL);
+      setModelLoaded(true);
+    } catch (e) {
+      console.error(e);
+      setError("Failed to load voice model.");
+    } finally {
+      setIsBusy(false);
+    }
+  }
+
   async function handleStart() {
     setError(null);
 
@@ -75,14 +110,21 @@ export default function FaqCtaBanner() {
       return;
     }
 
+    if (!modelRef.current) {
+      setError('Voice model is not loaded yet. Click "Load voice model" first.');
+      return;
+    }
+
+    const model = modelRef.current;
+
     setIsBusy(true);
 
-    let ws = null,
-      stream = null,
+    let stream = null,
       ctx = null,
       src = null,
       proc = null,
-      gain = null;
+      gain = null,
+      recognizer = null;
     let closed = false;
     let pendingTimeouts = [];
 
@@ -137,7 +179,7 @@ export default function FaqCtaBanner() {
         slides[idx].style.display = "block";
       }
 
-      // --- Static trigger words: "next" and "back" ---
+      // --- Trigger words: "next" and "back" ---
       const nextConfigs = [
         {
           label: "next",
@@ -164,31 +206,27 @@ export default function FaqCtaBanner() {
         }
       }
 
-      // per-utterance counting (same logic pattern)
       const perUtterance = {};
       [...nextConfigs, ...prevConfigs].forEach((cfg) => {
         perUtterance[cfg.normalizedLabel] = 0;
       });
 
-      // --- WebSocket to Vosk ASR server ---
-      const WS_URL = "ws://localhost:8765"; // change to wss:// in prod
-      ws = new WebSocket(WS_URL);
-      ws.binaryType = "arraybuffer";
-
-      ws.onopen = () => {
+      function handleRecognizerMessage(message, isFinal) {
         try {
-          ws.send(JSON.stringify({ type: "start", sampleRate: 16000 }));
-        } catch {}
-      };
+          const raw =
+            (isFinal
+              ? message.result?.text || ""
+              : message.result?.partial || "") || "";
+          const trimmed = raw.trim();
+          if (!trimmed || closed) return;
 
-      ws.onmessage = (ev) => {
-        try {
-          const data = JSON.parse(ev.data);
-          const raw = (data.partial || data.text || "").trim();
-          if (!raw) return;
-          if (closed) return;
+          console.log(
+            "[VOSK]",
+            isFinal ? "Result:" : "Partial:",
+            trimmed
+          );
 
-          const norm = normalize(raw);
+          const norm = normalize(trimmed);
 
           // NEXT
           nextConfigs.forEach((cfg) => {
@@ -220,18 +258,20 @@ export default function FaqCtaBanner() {
             }
           });
 
-          // On final result, reset per-utterance counters
-          if (data.text) {
+          // Reset counters at end of utterance
+          if (isFinal) {
             Object.keys(perUtterance).forEach((key) => {
               perUtterance[key] = 0;
             });
           }
-        } catch {
-          // ignore parse errors
+        } catch (err) {
+          console.error("Error handling recognizer message", err);
         }
-      };
+      }
 
-      // --- Microphone → AudioContext → 16k PCM16 → WebSocket (same as PresentationControls) ---
+      // --- Microphone → AudioContext → recognizer (Vosk in-browser) ---
+
+      // 1. Get mic
       stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           channelCount: 1,
@@ -241,60 +281,49 @@ export default function FaqCtaBanner() {
         video: false,
       });
 
-      ctx = new (window.AudioContext || window.webkitAudioContext)({
-        sampleRate: 48000,
-      });
-      const ctxSampleRate = ctx.sampleRate;
+      // 2. AudioContext
+      ctx = new (window.AudioContext || window.webkitAudioContext)();
+      await ctx.resume();
+      const recognizerSampleRate = ctx.sampleRate;
+      console.log("[VOSK] AudioContext sampleRate:", recognizerSampleRate);
+
+      // 3. Recognizer with correct sampleRate (REQUIRED) :contentReference[oaicite:2]{index=2}
+      recognizer = new model.KaldiRecognizer(recognizerSampleRate);
+      // Optional: output word-level info if you ever need it
+      recognizer.setWords?.(true);
+
+      recognizer.on("result", (message) =>
+        handleRecognizerMessage(message, true)
+      );
+      recognizer.on("partialresult", (message) =>
+        handleRecognizerMessage(message, false)
+      );
 
       src = ctx.createMediaStreamSource(stream);
       proc = ctx.createScriptProcessor(4096, 1, 1);
 
-      function floatTo16(f32) {
-        const out = new Int16Array(f32.length);
-        for (let i = 0; i < f32.length; i++) {
-          let s = Math.max(-1, Math.min(1, f32[i]));
-          out[i] = s < 0 ? s * 32768 : s * 32767;
-        }
-        return out;
-      }
-
-      function downsampleTo16k(input, inRate) {
-        if (inRate === 16000) return floatTo16(input);
-        const ratio = inRate / 16000;
-        const outLen = Math.floor(input.length / ratio);
-        const out = new Float32Array(outLen);
-        let i = 0,
-          o = 0;
-        while (o < outLen) {
-          const i0 = Math.floor(i);
-          const i1 = Math.min(i0 + 1, input.length - 1);
-          const frac = i - i0;
-          out[o++] = input[i0] * (1 - frac) + input[i1] * frac;
-          i += ratio;
-        }
-        return floatTo16(out);
-      }
-
       proc.onaudioprocess = (e) => {
-        if (!proc || !ctx || !ws || ws.readyState !== WebSocket.OPEN) return;
-        const f32 = e.inputBuffer.getChannelData(0);
-        const pcm16 = downsampleTo16k(f32, ctxSampleRate);
-        ws.send(pcm16.buffer);
+        if (!proc || !ctx || !recognizer || closed) return;
+        try {
+          // Feed raw AudioBuffer directly; vosk-browser will read samples from it
+          recognizer.acceptWaveform(e.inputBuffer);
+        } catch (error) {
+          console.error("acceptWaveform failed", error);
+        }
       };
 
-      // keep graph alive but muted
+      // Keep graph alive but muted
       gain = ctx.createGain();
       gain.gain.value = 0;
       src.connect(proc);
       proc.connect(gain);
       gain.connect(ctx.destination);
 
-      // --- Cleanup / keyboard / fullscreen handlers (same pattern) ---
+      // --- Cleanup / keyboard / fullscreen handlers ---
       function cleanup() {
         if (closed) return;
         closed = true;
 
-        // cancel any delayed actions
         pendingTimeouts.forEach((id) => clearTimeout(id));
         pendingTimeouts = [];
 
@@ -331,22 +360,9 @@ export default function FaqCtaBanner() {
         ctx = null;
 
         try {
-          if (ws) {
-            ws.onmessage = null;
-            ws.onerror = null;
-            ws.onclose = null;
-
-            if (ws.readyState === WebSocket.OPEN) {
-              try {
-                ws.send(JSON.stringify({ type: "stop" }));
-              } catch {}
-              ws.close(1000, "client done");
-            } else {
-              ws.close(1000, "client done");
-            }
-          }
+          if (recognizer) recognizer.remove();
         } catch {}
-        ws = null;
+        recognizer = null;
 
         try {
           if (document.fullscreenElement && document.exitFullscreen) {
@@ -388,6 +404,23 @@ export default function FaqCtaBanner() {
     }
   }
 
+  async function handlePrimaryClick() {
+    setError(null);
+
+    if (!fileName) {
+      const input = fileInputRef.current;
+      if (input) input.click();
+      return;
+    }
+
+    if (!modelLoaded) {
+      await handleLoadModelClick();
+      return;
+    }
+
+    await handleStart();
+  }
+
   return (
     <section className="px-0 md:px-4 pt-8 md:pt-12 md:-mb-8 w-full 2xl:max-w-360">
       <div className="mx-auto px-0 md:px-12">
@@ -405,60 +438,52 @@ export default function FaqCtaBanner() {
             presentation. You can also use the arrow keys and Escape.
           </p>
 
-          {/* Upload + start controls */}
           <div className="mt-8 flex flex-col items-center gap-4">
-            <div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".ppt,.pptx"
-                className="hidden"
-                id="faq-cta-ppt-upload"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    setFileName(file.name);
-                    setIsUploaded(true);
-                    setError(null);
-                  } else {
-                    setFileName("");
-                    setIsUploaded(false);
-                  }
-                }}
-              />
-              <label
-                htmlFor="faq-cta-ppt-upload"
-                className="inline-flex items-center justify-center
-                  rounded-2xl border-2 border-white/90 bg-white/0
-                  px-6 md:px-6 py-3.5 md:py-4
-                  text-base md:text-lg font-medium text-white
-                  hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/80
-                  cursor-pointer transition-all"
-              >
-                {fileName ? "Change PowerPoint" : "Upload PowerPoint"}
-                <span className="ml-2">&gt;</span>
-              </label>
-            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".ppt,.pptx"
+              className="hidden"
+              id="faq-cta-ppt-upload"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  setFileName(file.name);
+                  setError(null);
+                } else {
+                  setFileName("");
+                }
+              }}
+            />
+
+            <button
+              type="button"
+              onClick={handlePrimaryClick}
+              disabled={isBusy}
+              className="inline-flex items-center justify-center
+                rounded-2xl border-2 border-white/90 bg-white
+                px-6 md:px-8 py-3.5 md:py-4
+                text-base md:text-lg font-semibold text-[#2B7470]
+                hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-white/80
+                disabled:opacity-70 transition-all"
+            >
+              {isBusy
+                ? !fileName
+                  ? "Working…"
+                  : !modelLoaded
+                  ? "Loading voice model…"
+                  : "Starting…"
+                : !fileName
+                ? "Upload file"
+                : !modelLoaded
+                ? "Load voice model"
+                : "Start presentation"}
+            </button>
 
             {fileName && (
-              <>
-                <p className="text-sm text-white/90 truncate max-w-xs mx-auto">
-                  Selected: <span className="font-semibold">{fileName}</span>
-                </p>
-                <button
-                  type="button"
-                  onClick={handleStart}
-                  disabled={isBusy}
-                  className="inline-flex items-center justify-center
-                    rounded-2xl border-2 border-white/90 bg-white
-                    px-6 md:px-8 py-3.5 md:py-4
-                    text-base md:text-lg font-semibold text-[#2B7470]
-                    hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-white/80
-                    disabled:opacity-70 transition-all"
-                >
-                  {isBusy ? "Loading…" : "Start Presentation"}
-                </button>
-              </>
+              <p className="text-sm text-white/90 truncate max-w-xs mx-auto">
+                Selected: <span className="font-semibold">{fileName}</span>
+              </p>
             )}
 
             {error && (

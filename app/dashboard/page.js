@@ -7,6 +7,44 @@ import DashboardLayout from "@/components/DashboardLayout";
 
 export const runtime = "nodejs";
 
+function MobileBlocker() {
+  return (
+    <div className="min-h-screen w-full bg-linear-to-b from-[#1a1f35] to-[#0f1419] flex items-center justify-center px-4">
+      <div className="max-w-sm text-center">
+        <div className="mb-6 flex justify-center">
+          <img
+            src="/images/vf-icon-green (2).png"
+            alt="VoiceFlow Icon"
+            className="w-16 h-16"
+          />
+        </div>
+
+        <h1 className="text-3xl font-bold text-white mb-3">
+          Open Dashboard on Computer
+        </h1>
+        <p className="text-base text-white/70 mb-8 leading-relaxed">
+          The presentation dashboard is optimized for desktop. Please visit VoiceFlow on your computer to access the full dashboard and manage your presentations.
+        </p>
+
+        <div className="flex flex-col gap-3">
+          <a
+            href="/"
+            className="inline-flex items-center justify-center px-6 py-3 rounded-lg bg-linear-to-r from-[#53C1BC] via-[#3FA29E] to-[#2B7470] text-white font-semibold hover:opacity-90 transition-opacity"
+          >
+            Back to Home
+          </a>
+          <a
+            href="/api/auth/signin"
+            className="inline-flex items-center justify-center px-6 py-3 rounded-lg bg-white/5 border border-white/10 text-white font-semibold hover:bg-white/10 transition-colors"
+          >
+            Sign Out
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default async function DashboardPage() {
   // 1) User must be logged in
   const session = await auth();
@@ -36,7 +74,18 @@ export default async function DashboardPage() {
   // 4) Always-allowed statuses
   const OK_STATUSES = ["trialing", "active"];
   if (OK_STATUSES.includes(status)) {
-    return <DashboardLayout />;
+    return (
+      <>
+        {/* Mobile blocker */}
+        <div className="md:hidden">
+          <MobileBlocker />
+        </div>
+        {/* Desktop dashboard */}
+        <div className="hidden md:block">
+          <DashboardLayout />
+        </div>
+      </>
+    );
   }
 
   // 5) Grace logic for past_due / unpaid
@@ -51,7 +100,18 @@ export default async function DashboardPage() {
 
       // Still within grace window → allow
       if (now <= graceEnd) {
-        return <DashboardLayout />;
+        return (
+          <>
+            {/* Mobile blocker */}
+            <div className="md:hidden">
+              <MobileBlocker />
+            </div>
+            {/* Desktop dashboard */}
+            <div className="hidden md:block">
+              <DashboardLayout />
+            </div>
+          </>
+        );
       }
     }
 

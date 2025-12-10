@@ -10,32 +10,32 @@ const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"]
 
 /* <head> metadata */
 export const metadata = {
-  metadataBase: new URL("https://www.ugcreative.ai"),
-  title: "Create winning ads with AI Actors | UGCreative",
+  metadataBase: new URL("https://www.voiceflow.us"),
+  title: "VoiceFlow - Control powerpoints with your voice",
   description:
-    "Generate 100s of winning video ads from text using AI Actors—fast, cost-effective, and scalable.",
+    "Seemlessly control your PowerPoint presentations using voice commands. Navigate slides, execute actions, and present hands-free with AI-powered voice recognition.",
   keywords: [
-    "AI video ads",
-    "AI Actors",
-    "video marketing",
-    "UGCreative",
-    "automated video production",
+    "Powerpoint",
+    "Remote Control",
+    "voice control",
+    "Presentation",
+    "Automatic Slide Navigation",
   ],
   alternates: { canonical: "/" },robots: { index: true, follow: true },
   openGraph: {
     type: "website",
-    siteName: "UGCreative",
-    title: "Create winning ads with AI Actors | UGCreative",
+    siteName: "VoiceFlow",
+    title: "VoiceFlow - Control powerpoints with your voice",
     description:
-      "Generate 100s of winning video ads from text using AI Actors—fast, cost-effective, and scalable.",
+      "Seemlessly control your PowerPoint presentations using voice commands. Navigate slides, execute actions, and present hands-free with AI-powered voice recognition.",
     images: ["/images/og-image.jpg"],
   },
   twitter: {
     card: "summary_large_image",
     creator: "@YourTwitterHandle",
-    title: "Create winning ads with AI Actors | UGCreative",
+    title: "VoiceFlow - Control powerpoints with your voice",
     description:
-      "Generate 100s of winning video ads from text using AI Actors—fast, cost-effective, and scalable.",
+      "Seemlessly control your PowerPoint presentations using voice commands. Navigate slides, execute actions, and present hands-free with AI-powered voice recognition.",
     images: ["/images/og-image.jpg"],
   },
   icons: {

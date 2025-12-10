@@ -55,6 +55,12 @@ h3 {
     cursor: pointer;
   }
 
+  /* Prevent horizontal swipe/scroll revealing background */
+  html, body {
+    overflow-x: hidden;
+    overscroll-behavior-x: none;
+  }
+
   body.dark-bounce {
     background-color: #F1F5F7;
     overscroll-behavior-y: contain;
@@ -184,7 +190,7 @@ h3 {
   /* 3) Base animation (desktop & tablet) */
   .animate-marquee {
     animation-name: marquee-desktop;
-    animation-duration: 22.5s;
+    animation-duration: var(--marquee-duration-desktop, 22.5s);
     animation-timing-function: linear;
     animation-iteration-count: infinite;
   }
@@ -193,7 +199,7 @@ h3 {
   @media (max-width: 839px) {
     .animate-marquee {
       animation-name: marquee-mobile;
-      animation-duration: 25s;
+      animation-duration: var(--marquee-duration-mobile, 25s);
     }
   }
 }

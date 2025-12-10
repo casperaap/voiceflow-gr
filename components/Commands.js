@@ -2,6 +2,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { FeedbackModal } from "./FeedbackModal";
+import { useSession } from "next-auth/react";
 
 /**
  * Controlled Commands component.
@@ -14,6 +16,9 @@ export default function Commands({
   commands: commandsProp,
   onCommandsChange,
 }) {
+  const { data: session } = useSession();
+  const userEmail = session?.user?.email || "";
+  const [requestModalOpen, setRequestModalOpen] = useState(false);
   const defaultCommands = useMemo(
     () => [
       {
@@ -133,8 +138,42 @@ export default function Commands({
               </p>
             </div>
           ))}
+
+          {/* Request New Command Card */}
+          <button
+            onClick={() => setRequestModalOpen(true)}
+            className="w-[180px] flex flex-col gap-2 p-4 border-2 border-dashed border-emerald-500/40 rounded-lg bg-emerald-500/5 hover:bg-emerald-500/10 hover:border-emerald-500/60 transition-all group cursor-pointer"
+          >
+            <div className="flex items-center justify-center mb-1">
+              <svg
+                className="w-6 h-6 text-emerald-400 group-hover:text-emerald-300 transition-colors"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+            </div>
+            <h4 className="text-[0.75rem] font-medium text-emerald-300 group-hover:text-emerald-200 transition-colors text-center">
+              Request New Command
+            </h4>
+          </button>
         </div>
       </div>
+
+      {/* Request Command Modal */}
+      <FeedbackModal
+        open={requestModalOpen}
+        onClose={() => setRequestModalOpen(false)}
+        userEmail={userEmail}
+        customTitle="Request New Command"
+        customSubtitle="Tell us what command you'd like to see and we'll build it for you!"
+      />
     </div>
   );
 }

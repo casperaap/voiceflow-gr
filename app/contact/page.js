@@ -11,7 +11,7 @@ export default function ContactPage() {
     <div className="min-h-screen flex flex-col bg-[#ebeffc] font-sans">
       <Header />
 
-      <main className="flex-grow px-6 py-16 max-w-5xl mx-auto">
+      <main className="flex-grow px-6 pt-24 pb-16 md:pt-16 max-w-5xl mx-auto">
         {/* Hero Section */}
         <div className="mb-16 text-center">
           <h1 className="text-4xl md:text-5xl font-bold text-black mb-4">

@@ -1,124 +1,57 @@
 // app/components/Hero.jsx
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React from "react";
 import Image from "next/image";
+import ScrollFadeIn from "../ScrollFadeIn";
 
-/** Mobile-only infinite loop: move text left; when the first item is fully out, append it to the end */
-function BadgeTicker({ text, speed = 0.3, gap = 32, className = "" }) {
-  const wrapRef = useRef(null);
-
-useEffect(() => {
-  const wrap = wrapRef.current;
-  if (!wrap) return;
-
-  const track = wrap.querySelector("[data-track]");
-  if (!track) return;
-
-  // Ensure at least one item exists
-  let firstItem = track.firstElementChild;
-  if (!firstItem) {
-    const span = document.createElement("span");
-    span.className = "text-sm font-medium";
-    span.textContent = text;
-    track.appendChild(span);
-    firstItem = span;
-  }
-
-  // Apply gap to each item
-  const applyGap = () =>
-    Array.from(track.children).forEach(
-      (el) => (el.style.marginRight = `${gap}px`)
-    );
-  applyGap();
-
-  const mql = window.matchMedia("(max-width: 767.98px)");
-  let raf = 0;
-  let running = false;
-
-  // Duplicate until we can scroll seamlessly (just enough to cover 2x width)
-  const fill = () => {
-    const proto = track.firstElementChild;
-    if (!proto) return;
-
-    while (track.scrollWidth < wrap.clientWidth * 2) {
-      const clone = proto.cloneNode(true);
-      clone.setAttribute("aria-hidden", "true");
-      track.appendChild(clone);
-    }
-    applyGap();
-  };
-
-  let x = 0;
-  const step = () => {
-    x -= speed;
-
-    const first = track.firstElementChild;
-    if (first) {
-      const w = first.offsetWidth; // includes margin-right
-      if (-x >= w) {
-        track.appendChild(first);
-        x += w; // keep visual continuity
-      }
-    }
-
-    track.style.transform = `translate3d(${x}px,0,0)`;
-    raf = requestAnimationFrame(step);
-  };
-
-  const start = () => {
-    if (running) return;       // 🔑 don't restart if already running
-    running = true;
-    x = 0;
-    track.style.transform = `translate3d(${x}px,0,0)`;
-    fill();
-    raf = requestAnimationFrame(step);
-  };
-
-  const stop = () => {
-    if (!running) return;
-    running = false;
-    cancelAnimationFrame(raf);
-    track.style.transform = ""; // leave text readable when not animating
-  };
-
-  // 🔑 NEW: don't stop+start on every resize, just adjust clones
-  const onResize = () => {
-    if (!mql.matches) {
-      stop();
-      return;
-    }
-
-    if (!running) {
-      start();
-    } else {
-      // keep the current x, just ensure enough clones for the new width
-      fill();
-    }
-  };
-
-  const onChange = (e) => {
-    if (e.matches) start();
-    else stop();
-  };
-
-  // Initial run based on viewport
-  if (mql.matches) start();
-
-  window.addEventListener("resize", onResize);
-  mql.addEventListener("change", onChange);
-  return () => {
-    stop();
-    window.removeEventListener("resize", onResize);
-    mql.removeEventListener("change", onChange);
-  };
-}, [text, speed, gap]);
-
+/** Mobile-only marquee loop; two identical groups slide left for a seamless repeat */
+function BadgeTicker({ text, duration = 18, gap = 28, className = "" }) {
   return (
-    <div ref={wrapRef} className={`relative overflow-hidden flex-1 md:hidden ${className}`}>
-      <div data-track className="flex items-center whitespace-nowrap will-change-transform">
-        <span className="text-sm font-medium">{text}</span>
+    <div className={`relative overflow-hidden flex-1 md:hidden ${className}`}>
+      <div
+        className="badge-marquee"
+        style={{ "--badge-duration": `${duration}s`, "--badge-gap": `${gap}px` }}
+      >
+        <div className="badge-marquee__track">
+          <div className="badge-marquee__group">
+            <span className="badge-marquee__item">{text}</span>
+          </div>
+          <div className="badge-marquee__group" aria-hidden="true">
+            <span className="badge-marquee__item">{text}</span>
+          </div>
+        </div>
       </div>
+      <style jsx>{`
+        .badge-marquee {
+          position: relative;
+          overflow: hidden;
+          mask-image: linear-gradient(90deg, transparent 0%, black 12%, black 88%, transparent 100%);
+          -webkit-mask-image: linear-gradient(90deg, transparent 0%, black 12%, black 88%, transparent 100%);
+        }
+        .badge-marquee__track {
+          display: flex;
+          width: max-content;
+          animation: badge-loop var(--badge-duration) linear infinite;
+          will-change: transform;
+        }
+        .badge-marquee__group {
+          display: inline-flex;
+          align-items: center;
+          gap: var(--badge-gap);
+          padding-right: var(--badge-gap);
+          white-space: nowrap;
+        }
+        .badge-marquee__item {
+          font-size: 0.95rem;
+          font-weight: 600;
+          flex-shrink: 0;
+        }
+        @keyframes badge-loop {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+      `}</style>
     </div>
   );
 }
@@ -156,6 +89,7 @@ export default function Hero({
   }
 
   return (
+    <ScrollFadeIn>
     <>
       <div className="relative isolate min-h-[75vh] md:min-h-[80vh] flex items-start justify-center px-4 pt-16 md:pt-24">
         {/* Subtle background gradient with square grid pattern */}
@@ -229,11 +163,11 @@ export default function Hero({
               New
             </span>
 
-            {/* Phone: smooth, infinite loop (JS-driven) */}
+            {/* Phone: smooth, infinite loop (CSS-driven, matches logo marquee) */}
             <BadgeTicker
               text="'Hey Powerpoint, turn on a timer of 5 minutes.'"
-              speed={0.2}
-              gap={32}
+              duration={18}
+              gap={28}
               className="flex-1"
             />
 
@@ -303,26 +237,19 @@ export default function Hero({
       {/* brand marquee below the hero */}
       <LogosMarquee />
     </>
+    </ScrollFadeIn>
   );
 }
 
 /* brand marquee (static assets; keep here so Hero is self-contained) */
-function LogosMarquee() {
+function LogosMarquee({ desktopDuration = 22.5, mobileDuration = 40 }) {
   const logos = [
-    "/images/brand1.png",
-    "/images/brand2.png",
-    "/images/brand3.png",
-    "/images/brand4.png",
-    "/images/brand5.png",
-    "/images/brand6.png",
-    "/images/brand7.png",
-    "/images/brand8.png",
-    "/images/brand9.png",
-    "/images/brand10.png",
-    "/images/brand11.png",
-    "/images/brand12.png",
-    "/images/brand13.png",
-    "/images/brand14.png",
+    "/images/logos/1.png",
+    "/images/logos/2.png",
+    "/images/logos/3.png",
+    "/images/logos/4.png",
+    "/images/logos/5.png",
+    "/images/logos/6.png",
   ];
   const imgs = [...logos, ...logos];
   return (
@@ -332,7 +259,13 @@ function LogosMarquee() {
         <div className="absolute left-0 top-0 bottom-0 w-32 bg-linear-to-r from-[#ebeffc] to-transparent z-10 pointer-events-none" />
         {/* Right fade */}
         <div className="absolute right-0 top-0 bottom-0 w-32 bg-linear-to-l from-[#ebeffc] to-transparent z-10 pointer-events-none" />
-        <div className="flex items-center gap-12 opacity-60 animate-marquee">
+        <div
+          className="flex items-center gap-12 opacity-60 animate-marquee"
+          style={{
+            "--marquee-duration-desktop": `${desktopDuration}s`,
+            "--marquee-duration-mobile": `${mobileDuration}s`,
+          }}
+        >
           {imgs.map((src, i) => (
             <div key={`${src}-${i}`} className="relative shrink-0 h-14 w-32">
               <Image

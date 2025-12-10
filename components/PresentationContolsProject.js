@@ -243,13 +243,17 @@ export default function PresentationControlsProject({ projectId, projectName }) 
           position: "absolute",
           top: "16px",
           left: "16px",
-          padding: "8px 12px",
+          padding: "16px 24px",
           borderRadius: "999px",
           background: "rgba(15,23,42,0.9)",
           color: "white",
-          fontSize: "12px",
-          fontWeight: "600",
+          fontSize: "36px",
+          fontWeight: "700",
+          letterSpacing: "0.05em",
           zIndex: "10000",
+          fontFamily: "monospace",
+          minWidth: "140px",
+          textAlign: "center",
         });
         overlay.appendChild(timerOverlayEl);
         updateTimerOverlay();
@@ -353,6 +357,9 @@ export default function PresentationControlsProject({ projectId, projectName }) 
 
       // Apply result from /api/commands
       function isCommandTypeEnabled(type) {
+        // Stop command is always enabled
+        if (type === "stop") return true;
+        
         // Map GPT types to toggle names
         const map = {
           timer: "Timer",
@@ -379,7 +386,7 @@ export default function PresentationControlsProject({ projectId, projectName }) 
           return;
         }
 
-        // If command type disabled, treat as none with message
+        // If command type disabled, treat as none with message (except stop which is always enabled)
         if (!isCommandTypeEnabled(type)) {
           showNoCommandNotice("This command is disabled");
           return; // behave like type=none

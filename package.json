@@ -27,9 +27,11 @@
     "pptx-preview": "^1.0.7",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-intersection-observer": "^9.8.1",
     "resend": "^4.5.1",
     "stripe": "^20.0.0",
-    "tailwind-scrollbar-hide": "^2.0.0"
+    "tailwind-scrollbar-hide": "^2.0.0",
+    "vosk-browser": "^0.0.8"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

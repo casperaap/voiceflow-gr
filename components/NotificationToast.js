@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 
-export default function NotificationToast({ open, onClose, duration = 30000 }) {
+export default function NotificationToast({ open, onClose, duration = 30000, onFeedbackClick }) {
   const [visible, setVisible] = useState(!!open);
 
   useEffect(() => {
@@ -67,8 +67,20 @@ export default function NotificationToast({ open, onClose, duration = 30000 }) {
                 <p className="mt-1 text-sm text-white/85">
                   Voice‑controlled powerpoints are the future. Help us create a flawless experience by filling out our feedback form!
                 </p>
-                <div className="mt-3 flex items-center gap-3 text-xs text-white/60">
-                  <span>Sent • 1 December 2025</span>
+                <div className="mt-3 flex items-center justify-between gap-3">
+                  <span className="text-xs text-white/60">Sent • 1 December 2025</span>
+                  <button
+                    onClick={() => {
+                      onFeedbackClick?.();
+                    }}
+                    className="px-3 py-1.5 rounded-md text-xs font-medium bg-emerald-500/25 text-emerald-200 border border-emerald-500/40 hover:bg-emerald-500/35 transition-colors flex items-center gap-1.5"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                      <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                    </svg>
+                    Give Feedback
+                  </button>
                 </div>
               </div>
             </div>

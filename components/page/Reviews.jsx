@@ -1,5 +1,6 @@
 // app/components/Reviews.jsx
 import Image from "next/image";
+import ScrollFadeIn from "../ScrollFadeIn";
 
 export default function Reviews() {
   const reviews = [
@@ -27,6 +28,7 @@ export default function Reviews() {
   ];
 
   return (
+    <ScrollFadeIn>
     <section className="bg-[#ebeffc] py-0 md:py-0 -mt-4 md:mt-0 px-4">
       <div className="max-w-6xl mx-auto grid gap-8 md:grid-cols-3">
         {reviews.map(({ title, text, avatar, name, role }) => (
@@ -58,5 +60,6 @@ export default function Reviews() {
         ))}
       </div>
     </section>
+    </ScrollFadeIn>
   );
 }

@@ -15,7 +15,7 @@ export default function Page() {
       <Header />
       
     
-  <main className="px-6 py-12 max-w-5xl mx-auto text-[#555]">
+  <main className="px-6 pt-20 pb-12 md:pt-12 max-w-5xl mx-auto text-[#555]">
       <div className="w-layout-blockcontainer w-container">
         <div
           id="w-node-_3d2602c3-a612-3fff-3c9d-6e9073848d7e-b40e971f"

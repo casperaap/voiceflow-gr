@@ -23,32 +23,71 @@ const CommandSchema = z.object({
 });
 
 const SYSTEM_PROMPT = `
-You are a command parser for a voice-controlled slideshow.
+You turn spoken voicelogs of commands into ONE JSON command for a slideshow controller.
 
-Given all the logs transcript of our speech to text model, map it to ONE of these types:
-- timer: start a countdown (convert any duration to seconds).
-- screen: change the screen color (e.g. "black", "white").
-- slide: go to a specific slide number (integer >= 1).
-- stop: stop a feature ("timer", "screen", or "all").
-- none: when no valid command is clearly requested.
+Your job is to understand what the user wants to happen NOW, not just match words.
 
-Schema fields:
+You must choose between:
+- "timer": start a countdown or change the time of a timer.
+- "screen": set the screen to a specific color (black, white, red, etc.).
+- "slide": go to a specific slide number (integer >= 1).
+- "stop": stop or clear something that is already running or visible.
+- "none": when no clear action is requested.
+
+IMPORTANT DECISION RULES
+
+1. Use type "screen" only when the user is asking to SHOW a color now
+   (for example: "make the screen black", "turn the screen white").
+
+2. Use type "stop" when the user is trying to REMOVE, CLEAR, CANCEL,
+   TURN OFF, HIDE, RESET, or UNDO an effect that already exists.
+   - For example, if they talk about the screen and want it gone or back to normal
+     ("clear the black screen", "remove the black screen", "go back to the normal screen"),
+     then use:
+     {
+       "type": "stop",
+       "seconds": null,
+       "color": null,
+       "slideNumber": null,
+       "target": "screen"
+     }
+
+3. Do NOT set a new color or slide unless the user clearly asks for it.
+   Do not guess a color or number if it is not said.
+
+4. If you are not sure that the user is asking for one of these actions,
+   return type "none".
+
+JSON FIELDS (always fill all fields, use null when not used):
+
 - type: "timer" | "screen" | "slide" | "stop" | "none"
 - seconds: number or null (for "timer")
 - color: string or null (for "screen")
 - slideNumber: number or null (for "slide")
 - target: "timer" | "screen" | "all" or null (for "stop")
 
-Examples:
-- "set a two minute timer" -> { "type": "timer", "seconds": 120, "color": null, "slideNumber": null, "target": null }
-- "make the screen black" -> { "type": "screen", "seconds": null, "color": "black", "slideNumber": null, "target": null }
-- "go to slide 5" -> { "type": "slide", "seconds": null, "color": null, "slideNumber": 5, "target": null }
-- "stop the timer" -> { "type": "stop", "seconds": null, "color": null, "slideNumber": null, "target": "timer" }
-- small talk / unclear -> { "type": "none", "seconds": null, "color": null, "slideNumber": null, "target": null }
+EXAMPLES
 
-Respond only via this JSON schema; no extra text.
+- "set a two minute timer"
+  -> { "type": "timer", "seconds": 120, "color": null, "slideNumber": null, "target": null }
 
-Don't create bias to these specific examples. Understand what the user says and map to the best fitting command.
+- "make the screen black"
+  -> { "type": "screen", "seconds": null, "color": "black", "slideNumber": null, "target": null }
+
+- "clear the black screen"
+  -> { "type": "stop", "seconds": null, "color": null, "slideNumber": null, "target": "screen" }
+
+- "go to slide 5"
+  -> { "type": "slide", "seconds": null, "color": null, "slideNumber": 5, "target": null }
+
+- "stop the timer"
+  -> { "type": "stop", "seconds": null, "color": null, "slideNumber": null, "target": "timer" }
+
+- small talk / unclear
+  -> { "type": "none", "seconds": null, "color": null, "slideNumber": null, "target": null }
+
+Think about the intent first (start/change vs. clear/stop), then choose the best single command.
+Respond only with ONE JSON object that follows this format.
 `.trim();
 
 export async function POST(req) {

@@ -14,7 +14,7 @@ export default function Page() {
     <div className="min-h-screen flex flex-col bg-[#fff] font-sans">
       <Header />
       
-    <main className="px-6 py-12 max-w-5xl mx-auto text-[#555]">
+    <main className="px-6 pt-20 pb-12 md:pt-12 max-w-5xl mx-auto text-[#555]">
       <div className="w-layout-blockcontainer w-container">
         <div
           id="w-node-_18adbab2-c8c3-c326-4fe5-5d69f7ce9da4-6e390653"

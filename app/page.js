@@ -1,13 +1,13 @@
 export const metadata = {
-    title: "Control powerpoints with your voice | VoiceFlow",
+    title: "VoiceFlow - Control powerpoints with your voice",
     description:
-      "Generate 100s of winning video ads from text using AI Actors—fast, cost-effective, and scalable.",
+      "Seemlessly control your PowerPoint presentations using voice commands. Navigate slides, execute actions, and present hands-free with AI-powered voice recognition.",
     keywords: [
-      "AI video ads",
-      "AI Actors",
-      "video marketing",
-      "UGCreative",
-      "automated video production",
+      "Powerpoint",
+      "Remote Control",
+      "voice control",
+      "Presentation",
+      "Automatic Slide Navigation",
     ],
   alternates: { canonical: "/" },};
   
