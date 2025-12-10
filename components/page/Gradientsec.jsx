@@ -30,7 +30,8 @@ export default function Gradientsec() {
           <h2 className="text-3xl md:text-5xl font-bold leading-tight md:leading-tight max-w-2xl m-auto">
             Say goodbye fragile and costly remote controllers
           </h2>
-          <p className="mt-4 max-w-lg mx-auto text-gray-700 text-sm md:text-base">
+          
+          <p className="mt-4 max-w-lg mx-auto px-6 md:px-0 text-gray-700 text-sm md:text-base ">
             Navigating your powerpoint should be as easy as talking. VoiceFlow
             keeps everything streamlined and easy to manage from its
             simple-to-use interface. It’s designed for a human-first
