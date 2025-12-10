@@ -59,6 +59,7 @@ h3 {
   html, body {
     overflow-x: hidden;
     overscroll-behavior-x: none;
+    background-color: #ebeffc; /* match site background so iOS bounce reveals brand off-white */
   }
 
   body.dark-bounce {
